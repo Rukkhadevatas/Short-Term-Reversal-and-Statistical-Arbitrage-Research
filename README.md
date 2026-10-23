@@ -1,130 +1,109 @@
-# Short-Term Reversal: Strategy Replication and Transaction Cost Analysis
+# Short-Term Reversal: Mean-Reversion Backtests on U.S. Sector ETFs
 
-A reproducible quantitative research project inspired by Ernest P. Chan's *Quantitative Trading*. The initial goal is to replicate a simple cross-sectional mean-reversion strategy and investigate how trading costs affect its performance. A later extension will compare short-term reversal signals with different lookback windows.
+A small, reproducible quantitative research project inspired by Ernest P. Chan's *Quantitative Trading*. Using **Yahoo Finance adjusted daily prices for nine U.S. sector ETFs (2018–2025)**, this project evaluates a one-day cross-sectional mean-reversion rule and extends the analysis to **1-, 5-, and 20-day reversal factors**.
 
-> **Status:** Work in progress. This repository documents a research replication, not a live trading system. No performance claims are made until the experiments are run and verified.
-
-## Research questions
-
-1. Does a one-day cross-sectional reversal signal generate positive gross returns in the chosen historical sample?
-2. How sensitive are the results to transaction costs and portfolio turnover?
-3. Do alternative reversal lookback windows (e.g., 5 or 20 trading days) improve out-of-sample robustness?
-
-## Strategy definition
-
-For asset $i$ on date $t$, let $P_{i,t}$ denote the adjusted closing price and
-
-$$
-r_{i,t} = \frac{P_{i,t}}{P_{i,t-1}} - 1.
-$$
-
-For the set $U_t$ of eligible assets with valid observations, define the equal-weighted cross-sectional mean return:
-
-$$
-\bar r_t = \frac{1}{|U_t|}\sum_{i\in U_t}r_{i,t}.
-$$
-
-The unnormalized reversal signal is $s_{i,t}=-(r_{i,t}-\bar r_t)$. The target portfolio weights are
-
-$$
-w_{i,t}=\begin{cases}
-\displaystyle\frac{s_{i,t}}{\sum_{j\in U_t}|s_{j,t}|}, & \sum_{j\in U_t}|s_{j,t}|>0,\\
-0, & \text{otherwise}.
-\end{cases}
-$$
-
-For a complete cross-section with nonzero dispersion, the weights satisfy $\sum_i w_{i,t}=0$ and $\sum_i|w_{i,t}|=1$. Positive weights represent long positions and negative weights represent short positions.
-
-Under a simplified convention in which the signal formed at the close of day $t-1$ determines exposure over day $t$, gross strategy return is
-
-$$
-R^{\mathrm{gross}}_t=\sum_i w_{i,t-1}r_{i,t}.
-$$
-
-A basic **approximate** transaction-cost model is
-
-$$
-\mathrm{Cost}_t=c\sum_i|w_{i,t-1}-w_{i,t-2}|,
-\qquad
-R^{\mathrm{net}}_t=R^{\mathrm{gross}}_t-\mathrm{Cost}_t,
-$$
-
-where $c$ is a one-way cost per unit of traded notional (e.g., $c=0.0005$ means 5 basis points). This target-weight difference is a simplified turnover proxy: an execution-aware backtest must account for weight drift, the timing of orders and fills, initial positions, and financing/shorting costs. Using a closing-price signal with execution at that same close is not generally achievable; the timing convention will be stated explicitly in the experiments.
-
-## Planned experiments
-
-- **01 — Chan replication:** inspect the input data, construct daily reversal weights, and compare gross and net returns.
-- **02 — Reversal factors:** test prespecified 1-, 5-, and 20-day lookback signals and long–short portfolio sorting.
-- **03 — Robustness:** compare transaction-cost assumptions, evaluate turnover, and perform chronological out-of-sample tests.
-
-Planned evaluation metrics include annualized Sharpe ratio, cumulative return, maximum drawdown, turnover, and (for the factor extension) cross-sectional information coefficient (IC). Report actual sample dates, conventions, and results once available.
-
-## Repository layout
-
-```text
-short-term-reversal-research/
-├── README.md
-├── requirements.txt
-├── data/                       # data files (only if redistribution is permitted)
-├── notebooks/
-│   ├── 01_chan_replication.ipynb
-│   ├── 02_reversal_factor.ipynb
-│   └── 03_robustness.ipynb
-├── src/                        # reusable data, signal, backtest, metric functions
-├── tests/                      # checks for time alignment and portfolio accounting
-└── results/                    # verified plots and summary tables
-```
-
-*The directories and notebooks above are the intended structure; create them as the work progresses.*
-
-## Getting started
-
-Python 3.10+ is recommended.
-
-```bash
-python -m venv .venv
-```
-
-Activate the environment:
-
-```bash
-# macOS / Linux
-source .venv/bin/activate
-
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-```
-
-Install dependencies:
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-Launch Jupyter after the first notebook has been added:
-
-```bash
-jupyter lab
-```
-
-Open `notebooks/01_chan_replication.ipynb` and run its cells in order. **The notebook is planned, not included in this starter repository.**
-
-## Data and reproducibility
-
-The original example refers to `SPX_20071123.txt`. It is **not included here**. Obtain any book-supplied data from an authorized source and check redistribution rights before committing it to GitHub. If substituting another dataset, document its provider, price adjustments, date range, stock universe, and missing-data policy; do not expect to reproduce the book's numerical Sharpe ratios exactly.
-
-For stock-level backtests, watch for survivorship bias, delistings, corporate actions, and changes in index constituents. A historical index-constituent universe is preferable to using today's constituents for past dates. Keep a separate untouched test period when comparing candidate signals.
+**Main finding:** The four tested variants had gross annualized Sharpe ratios near zero or slightly negative, while a 5-bp one-way cost assumption reduced annualized Sharpe by **0.51–2.25 points**.
 
 ## Results
 
-**Pending replication.** Add verified figures and a compact results table here once the analysis is complete. Do not treat published or illustrative performance numbers as reproduced results.
+**All Sharpe ratios below are annualized** using $\sqrt{252}\,\overline R/s(R)$, with daily strategy returns. Net performance includes an assumed **5 bps (0.05%) one-way transaction cost** per unit of traded notional. Values are from the user's completed notebook runs.
 
-## Limitations
+| Strategy | Gross annualized Sharpe | Net annualized Sharpe | Sharpe decline (gross − net) |
+|:--|--:|--:|--:|
+| Chan one-day cross-sectional mean reversion | −0.1300 | −2.1130 | 1.9830 |
+| 1-day reversal factor (3 long / 3 short) | −0.1614 | −2.4108 | 2.2494 |
+| 5-day reversal factor (3 long / 3 short) | +0.0442 | −0.9068 | 0.9510 |
+| 20-day reversal factor (3 long / 3 short) | −0.0185 | −0.5248 | 0.5063 |
 
-This is an educational research project. A simple close-to-close backtest does not model realistic order execution, spread, market impact, borrow availability or fees, financing, or all corporate actions. Report such assumptions clearly before interpreting net returns as tradable performance.
+The **Chan** and **1-day factor** rows are intentionally distinct: both use one-day returns to form a signal, but Chan assigns continuous cross-sectional weights while the factor portfolio holds equally weighted top/bottom groups. Thus their results need not match.
 
-## References
+**Interpretation:** Gross performance was close to zero across the four variants; modeled trading costs produced much weaker net results. The shorter-horizon approaches experienced the largest Sharpe declines under the reported backtests. This is a descriptive result for nine U.S. sector ETFs during **2018–2025**, not evidence that reversal is universally ineffective or a formal statistical significance test. The observed reduction should not be described as a percentage change in Sharpe: it is an **absolute difference in Sharpe units**.
 
-- Chan, Ernest P. *Quantitative Trading: How to Build Your Own Algorithmic Trading Business*. Wiley, 2009. (Strategy inspiration; credit the original example.)
-- Additional data-provider documentation and research papers will be listed as they are used.
+## Data
+
+- **Provider:** Yahoo Finance, downloaded through [`yfinance`](https://github.com/ranaroussi/yfinance)
+- **Universe:** XLB, XLE, XLF, XLI, XLK, XLP, XLU, XLV, XLY (nine U.S. sector ETFs)
+- **Sample:** January 2018–December 2025; requested with `start="2018-01-01"`, `end="2026-01-01"` (exclusive end date)
+- **Frequency:** Daily
+- **Prices:** Auto-adjusted close (`auto_adjust=True`)
+- **Missing data:** Only dates with prices for all nine ETFs are retained
+
+The ETF universe is fixed in this study. Data are downloaded when each notebook runs; no proprietary source data are included.
+
+## Methodology
+
+### 1. Chan-inspired one-day cross-sectional mean reversion
+
+For ETF $i$ on trading day $t$, define the daily return and the cross-sectional average:
+
+$$
+r_{i,t}=\frac{P_{i,t}}{P_{i,t-1}}-1, \qquad
+\bar r_t=\frac{1}{N}\sum_{j=1}^{N}r_{j,t}.
+$$
+
+The target weights are
+
+$$
+w_{i,t}=-\frac{r_{i,t}-\bar r_t}{\sum_{j=1}^{N}|r_{j,t}-\bar r_t|},
+$$
+
+with zero weights if the denominator vanishes. These weights are dollar-neutral and have unit gross exposure when the signal is nonzero. The strategy buys relative losers and shorts relative winners. The notebook computes gross and net returns and reports annualized Sharpe and other performance statistics.
+
+### 2. Reversal factors
+
+For lookback $k\in\{1,5,20\}$ trading days:
+
+$$
+F_{i,t}^{(k)}=-\left(\frac{P_{i,t}}{P_{i,t-k}}-1\right).
+$$
+
+Each day, ETFs are ranked by the factor. The backtest **buys the three highest-ranked ETFs** (recent losers) and **shorts the three lowest-ranked ETFs** (recent winners), with equal positions and gross exposure of 1 (long +0.5, short -0.5). The notebook also computes daily **Spearman rank IC** by correlating ranked signals with ranked target returns. Rank IC is not a Sharpe ratio and is not annualized. The IC is an analysis output, not an independently verified performance claim in the results table above.
+
+### 3. Backtest assumptions
+
+- **Signal and execution:** Signals are formed after day $t$ closes; the model assumes a trade at the *next close*, followed by the next close-to-close return (a **two-row lag** in the daily return table).
+- **Transaction cost:** A flat **5 basis points (0.05%) one-way** charge per unit of traded notional.
+- **Turnover:** Computed from the required rebalance relative to prior positions after their weights have drifted with returns.
+- **Evaluation:** Both notebooks calculate **annualized Sharpe** as $\sqrt{252}\,\bar R / s(R)$; the factor notebook also plots gross and net cumulative wealth.
+
+This is a **simplified vectorized historical backtest**, not a fill-level trading simulator. It does not fully model bid–ask spreads, borrow fees, financing, market impact, order execution, or tradability at the assumed close.
+
+## Repository files
+
+```text
+.
+├── README.md
+├── chan_application.ipynb  # Chan-inspired one-day strategy and costs
+└── reversal_factor.ipynb   # 1/5/20-day factors, rank IC, long–short tests
+```
+
+The notebooks are self-contained. No `requirements.txt`, `src/` package, external local data file, or separate research report is required for the current project.
+
+## Reproduce
+
+1. Open the notebooks in Jupyter or PyCharm with a Python kernel and an internet connection.
+2. Install packages once in the notebook environment if needed:
+
+   ```python
+   %pip install yfinance numpy pandas matplotlib
+   ```
+
+3. Run `chan_application.ipynb` from top to bottom.
+4. Run `reversal_factor.ipynb` from top to bottom.
+5. Compare the generated Sharpe ratios with the rounded results table above. Yahoo Finance historical adjustments or library updates may lead to differences.
+
+**Note:** The factor notebook calculates rank IC using `rank()` followed by Pearson correlation, which is equivalent to Spearman correlation and avoids a SciPy dependency for this step. Both notebooks already annualize Sharpe; do not multiply the reported values by $\sqrt{252}$ again.
+
+## Scope and limitations
+
+- The ETF portfolios differ from Chan's original S&P 500 constituent-stock example; this is a **strategy adaptation and empirical replication of the logic**, not a numerical reproduction of the book's reported Sharpe ratio.
+- The study evaluates **nine sector ETFs**, not a broad, historically reconstructed equity universe.
+- The reported results are **in-sample descriptive backtests**; no independent out-of-sample test or multiple-testing adjustment has been completed.
+- Near-zero gross Sharpe is not proof of zero predictive effect; a statistical significance analysis would be necessary for stronger claims.
+- Transaction costs are stylized and may understate or overstate realizable execution costs.
+
+## Reference
+
+Chan, Ernest P. *Quantitative Trading: How to Build Your Own Algorithmic Trading Business*. Wiley, 2009.
+
+Data: [Yahoo Finance](https://finance.yahoo.com/) via [`yfinance`](https://github.com/ranaroussi/yfinance).
