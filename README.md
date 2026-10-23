@@ -17,7 +17,7 @@ All Sharpe ratios below are annualized with daily strategy returns. Net performa
 
 **Remark:** The Chan's and 1-day factor rows are intentionally distinct: both use one-day returns to form a signal, but Chan's assigns continuous cross-sectional weights while the factor portfolio holds equally weighted top/bottom groups. Thus their results need not match.
 
-**Interpretation:** Gross performance was close to zero across the four variants; modeled trading costs produced much weaker net results. The shorter-horizon approaches experienced the largest Sharpe declines under the reported backtests. This is a descriptive result for nine U.S. sector ETFs during **2018–2025**, not evidence that reversal is universally ineffective or a formal statistical significance test. The observed reduction should not be described as a percentage change in Sharpe: it is an **absolute difference in Sharpe units**.
+**Interpretation:** Gross performance was close to zero across the four variants; modeled trading costs produced much weaker net results. The shorter-horizon approaches experienced the largest Sharpe declines under the reported backtests. This is a descriptive result for nine U.S. sector ETFs during 2018–2025, not evidence that reversal is universally ineffective. 
 
 ## Data
 
@@ -64,16 +64,14 @@ Each day, ETFs are ranked by the factor. The backtest buys the three highest-ran
 - **Signal and execution:** Signals are formed after day $t$ closes; the model assumes a trade at the *next close*, followed by the next close-to-close return (a two-row lag in the daily return table).
 - **Transaction cost:** A flat **5 basis points (0.05%) one-way** charge per unit of traded notional.
 - **Turnover:** Computed from the required rebalance relative to prior positions after their weights have drifted with returns.
-- **Evaluation:** Both notebooks calculate **annualized Sharpe**; the factor notebook also plots gross and net cumulative wealth.
-
-This is a **simplified vectorized historical backtest**, not a fill-level trading simulator. It does not fully model bid–ask spreads, borrow fees, financing, market impact, order execution, or tradability at the assumed close.
+- **Evaluation:** Both notebooks calculate **annualized Sharpe**; the second notebook also plots gross and net cumulative wealth.
 
 ## Scope and limitations
 
 - The ETF portfolios differ from Chan's original S&P 500 constituent-stock example; this is a small strategy adaptation, not only a numerical reproduction of the book's reported Sharpe ratio.
 - The study only evaluates nine sector ETFs, not a broad, historically reconstructed equity universe.
 - The reported results are in-sample descriptive backtests; no independent out-of-sample test or multiple-testing adjustment has been completed.
-- Transaction costs are stylized and may understate or overstate realizable execution costs.
+- Transaction costs are stylized and may understate or overstate realizable execution costs, it does not fully model bid–ask spreads, borrow fees, financing, market impact, order execution, or tradability at the assumed close.
 
 ## Reference
 
